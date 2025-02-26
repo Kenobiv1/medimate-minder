@@ -6,9 +6,11 @@ import { Switch } from '@/components/ui/switch';
 import { Link } from 'react-router-dom';
 import { Label } from '@/components/ui/label';
 import { useToast } from "@/hooks/use-toast";
+import { useTheme } from '@/contexts/ThemeContext';
 
 const Settings = () => {
   const { toast } = useToast();
+  const { theme, toggleTheme } = useTheme();
 
   const handleEmergencyCall = () => {
     toast({
@@ -48,7 +50,10 @@ const Settings = () => {
                     Switch between light and dark mode
                   </p>
                 </div>
-                <Switch />
+                <Switch 
+                  checked={theme === 'dark'}
+                  onCheckedChange={toggleTheme}
+                />
               </div>
               
               <div className="flex items-center justify-between">

@@ -24,13 +24,15 @@ const demoAlarms = [
 const Index = () => {
   return (
     <div className="min-h-screen p-6 space-y-8">
-      <header className="flex items-center justify-between">
+      <header className="flex flex-col items-center justify-between">
         <Clock />
-        <Link to="/settings">
-          <Button variant="ghost" size="icon" className="rounded-full">
-            <SettingsIcon className="w-5 h-5" />
-          </Button>
-        </Link>
+        <div className="absolute top-6 right-6">
+          <Link to="/settings">
+            <Button variant="ghost" size="icon" className="rounded-full">
+              <SettingsIcon className="w-5 h-5" />
+            </Button>
+          </Link>
+        </div>
       </header>
 
       <main className="max-w-2xl mx-auto space-y-8">
