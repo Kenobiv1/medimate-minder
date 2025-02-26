@@ -1,9 +1,10 @@
 
-import { AlarmClock, Plus } from 'lucide-react';
+import { AlarmClock, Plus, Pills } from 'lucide-react';
 import Clock from '@/components/Clock';
 import AlarmCard from '@/components/AlarmCard';
 import AIPlaceholder from '@/components/AIPlaceholder';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 
 const demoAlarms = [
   {
@@ -34,9 +35,17 @@ const Index = () => {
               <AlarmClock className="w-6 h-6" />
               Medication Alarms
             </h2>
-            <Button size="icon" className="rounded-full">
-              <Plus className="w-5 h-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Link to="/medications">
+                <Button variant="outline" className="gap-2">
+                  <Pills className="w-5 h-5" />
+                  Manage Medications
+                </Button>
+              </Link>
+              <Button size="icon" className="rounded-full">
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
           </div>
           
           <div className="grid gap-4">
