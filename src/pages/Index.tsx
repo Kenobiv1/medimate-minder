@@ -1,5 +1,5 @@
 
-import { AlarmClock, Plus, Pills } from 'lucide-react';
+import { AlarmClock, Plus, Pill } from 'lucide-react';
 import Clock from '@/components/Clock';
 import AlarmCard from '@/components/AlarmCard';
 import AIPlaceholder from '@/components/AIPlaceholder';
@@ -38,7 +38,7 @@ const Index = () => {
             <div className="flex items-center gap-2">
               <Link to="/medications">
                 <Button variant="outline" className="gap-2">
-                  <Pills className="w-5 h-5" />
+                  <Pill className="w-5 h-5" />
                   Manage Medications
                 </Button>
               </Link>
