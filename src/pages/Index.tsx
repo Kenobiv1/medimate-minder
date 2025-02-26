@@ -1,5 +1,5 @@
 
-import { AlarmClock, Plus, Pill } from 'lucide-react';
+import { AlarmClock, Plus, Pill, ScrollText, Settings as SettingsIcon } from 'lucide-react';
 import Clock from '@/components/Clock';
 import AlarmCard from '@/components/AlarmCard';
 import AIPlaceholder from '@/components/AIPlaceholder';
@@ -24,8 +24,13 @@ const demoAlarms = [
 const Index = () => {
   return (
     <div className="min-h-screen p-6 space-y-8">
-      <header className="text-center space-y-4">
+      <header className="flex items-center justify-between">
         <Clock />
+        <Link to="/settings">
+          <Button variant="ghost" size="icon" className="rounded-full">
+            <SettingsIcon className="w-5 h-5" />
+          </Button>
+        </Link>
       </header>
 
       <main className="max-w-2xl mx-auto space-y-8">
@@ -52,6 +57,15 @@ const Index = () => {
             {demoAlarms.map((alarm) => (
               <AlarmCard key={alarm.id} alarm={alarm} />
             ))}
+          </div>
+
+          <div className="flex justify-end">
+            <Link to="/history">
+              <Button variant="ghost" className="gap-2">
+                <ScrollText className="w-5 h-5" />
+                View History
+              </Button>
+            </Link>
           </div>
         </section>
 
