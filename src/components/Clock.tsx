@@ -15,7 +15,7 @@ const Clock = () => {
 
   return (
     <div className="text-center space-y-2">
-      <div className="text-6xl font-bold tracking-tight text-primary animate-float">
+      <div className="text-6xl font-bold tracking-tight text-primary">
         {format(time, 'HH:mm')}
       </div>
       <div className="text-2xl text-muted-foreground">

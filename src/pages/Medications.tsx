@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
 import AlarmCard, { Alarm } from '@/components/AlarmCard';
+import { useToast } from "@/hooks/use-toast";
 
 const demoMedications = [
   {
@@ -35,6 +36,22 @@ const demoMedications = [
 ];
 
 const Medications = () => {
+  const { toast } = useToast();
+
+  const handleAddMedication = () => {
+    toast({
+      title: "Add New Medication",
+      description: "Coming soon: Add new medication form",
+    });
+  };
+
+  const handleConfigureMedication = (medicationName: string) => {
+    toast({
+      title: "Configure Medication",
+      description: `Coming soon: Configure ${medicationName} settings`,
+    });
+  };
+
   return (
     <div className="min-h-screen p-6 space-y-8">
       <header className="flex items-center justify-between">
@@ -52,7 +69,7 @@ const Medications = () => {
             <Pill className="w-8 h-8" />
             My Medications
           </h1>
-          <Button size="icon" className="rounded-full">
+          <Button size="icon" className="rounded-full" onClick={handleAddMedication}>
             <Plus className="w-5 h-5" />
           </Button>
         </div>
@@ -65,7 +82,12 @@ const Medications = () => {
                   <h2 className="text-xl font-semibold">{medication.name}</h2>
                   <p className="text-sm text-muted-foreground">{medication.dosage}</p>
                 </div>
-                <Button variant="outline">Configure</Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => handleConfigureMedication(medication.name)}
+                >
+                  Configure
+                </Button>
               </div>
               
               <div className="space-y-2">
