@@ -86,11 +86,16 @@ const Index = () => {
             ))}
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end space-x-2">
             <Link to="/history">
               <Button variant="ghost" className="gap-2">
                 <ScrollText className="w-5 h-5" />
                 View History
+              </Button>
+            </Link>
+            <Link to="/analytics">
+              <Button variant="outline" className="gap-2">
+                <span>Analytics</span>
               </Button>
             </Link>
           </div>
