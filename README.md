@@ -1,69 +1,57 @@
-# Welcome to your Lovable project
+# Medimate Minder
 
-## Project info
+An easy-to-use application that helps you manage your daily medication schedule. With Medimate Minder, you can add new medications, set alarms, track medication history, and configure settings such as dark mode.
 
-**URL**: https://lovable.dev/projects/6ed4815c-6a63-49f4-9ea2-c6b617e32c60
+## Table of Contents
 
-## How can I edit this code?
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+  - [Running the App](#running-the-app)
+- [Usage](#usage)
+  - [Dashboard](#dashboard)
+  - [Adding and Configuring Medications](#adding-and-configuring-medications)
+  - [Medication Alarms](#medication-alarms)
+  - [Medication History](#medication-history)
+  - [Settings](#settings)
+- [Project Structure](#project-structure)
+- [Contributing](#contributing)
+- [License](#license)
+- [Contact](#contact)
 
-There are several ways of editing your application.
+---
 
-**Use Lovable**
+## Features
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/6ed4815c-6a63-49f4-9ea2-c6b617e32c60) and start prompting.
+- **Add New Medications**: Enter the name, dosage, and alarms for a new medication.
+- **Configure Medications**: Update medication details or modify alarms.
+- **Medication Alarms**: Get reminders for each medication based on your scheduled times.
+- **Medication History**: Track your medication intake history (taken or missed).
+- **Dark Mode Support**: Toggle between light and dark themes.
+- **Emergency Contact**: One-click emergency contact calling (configurable).
 
-Changes made via Lovable will be committed automatically to this repo.
+## Tech Stack
 
-**Use your preferred IDE**
+- **React** (TypeScript) + **Vite** for the frontend
+- **Tailwind CSS** + [shadcn/ui](https://ui.shadcn.com/) for styling
+- **React Router** for navigation
+- **React Query** for data fetching and caching (if used)
+- **sonner** / **Radix Toast** for notifications
+- Additional libraries: **date-fns**, **lucide-react**, etc.
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Getting Started
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### Prerequisites
 
-Follow these steps:
+- [Node.js](https://nodejs.org/) (version 16 or higher)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+### Installation
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+1. **Clone** the repository:
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
-
-**Edit a file directly in GitHub**
-
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with .
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/6ed4815c-6a63-49f4-9ea2-c6b617e32c60) and click on Share -> Publish.
-
-## I want to use a custom domain - is that possible?
-
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+   ```bash
+   git clone <REPO_URL>
+   cd <REPO_NAME>
