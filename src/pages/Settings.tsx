@@ -1,4 +1,3 @@
-
 import { Settings as SettingsIcon, Moon, Sun, BellRing, Phone } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 
 const Settings = () => {
   const { toast } = useToast();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, isLargeText, toggleLargeText } = useTheme();
 
   const handleEmergencyCall = () => {
     toast({
@@ -63,7 +62,10 @@ const Settings = () => {
                     Increase text size for better readability
                   </p>
                 </div>
-                <Switch />
+                <Switch 
+                  checked={isLargeText}
+                  onCheckedChange={toggleLargeText}
+                />
               </div>
             </Card>
           </section>
