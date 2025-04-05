@@ -2,17 +2,17 @@
 import { useState, useEffect } from 'react';
 import { AlarmClock, Plus, Pill, ScrollText, Settings as SettingsIcon } from 'lucide-react';
 import Clock from '@/components/Clock';
-import AlarmCard from '@/components/AlarmCard';
+import AlarmCard, { Alarm } from '@/components/AlarmCard';
 import AIPlaceholder from '@/components/AIPlaceholder';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Alarm } from '@/components/AlarmCard';
 import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import type { Database } from '@/integrations/supabase/types';
 
 const Index = () => {
   const { user } = useAuth();
@@ -40,10 +40,10 @@ const Index = () => {
           .order('created_at', { ascending: false });
           
         if (medsError) throw medsError;
-        setMedications(medsData);
+        setMedications(medsData || []);
         
         // If there are medications, set the first one as selected by default
-        if (medsData.length > 0) {
+        if (medsData && medsData.length > 0) {
           setSelectedMedicationId(medsData[0].id);
         }
         
@@ -62,13 +62,13 @@ const Index = () => {
           
         if (alarmsError) throw alarmsError;
         
-        const formattedAlarms: Alarm[] = alarmsData.map(alarm => ({
+        const formattedAlarms: Alarm[] = alarmsData ? alarmsData.map(alarm => ({
           id: alarm.id,
           time: alarm.time,
           label: alarm.label,
           isActive: alarm.is_active,
           medicationName: alarm.medications?.name
-        }));
+        })) : [];
         
         setAlarms(formattedAlarms);
       } catch (error) {
@@ -120,11 +120,11 @@ const Index = () => {
       
       // Add the new alarm to state
       const newAlarm: Alarm = {
-        id: data.id,
-        time: data.time,
-        label: data.label,
-        isActive: data.is_active,
-        medicationName: data.medications?.name
+        id: data?.id || '',
+        time: data?.time || '',
+        label: data?.label || '',
+        isActive: data?.is_active || false,
+        medicationName: data?.medications?.name
       };
       
       setAlarms(prev => [...prev, newAlarm].sort((a, b) => a.time.localeCompare(b.time)));
@@ -218,12 +218,6 @@ const Index = () => {
           )}
 
           <div className="flex justify-end space-x-2">
-            <Link to="/history">
-              <Button variant="ghost" className="gap-2">
-                <ScrollText className="w-5 h-5" />
-                View History
-              </Button>
-            </Link>
             <Link to="/analytics">
               <Button variant="outline" className="gap-2">
                 <span>Analytics</span>

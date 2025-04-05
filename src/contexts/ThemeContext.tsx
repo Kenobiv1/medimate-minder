@@ -1,4 +1,6 @@
+
 import { createContext, useContext, useEffect, useState } from 'react';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
 
 type Theme = 'light' | 'dark';
 
@@ -12,8 +14,9 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
-  const [theme, setTheme] = useState<Theme>('light');
-  const [isLargeText, setIsLargeText] = useState(false);
+  // Use localStorage to persist theme and text size preferences
+  const [theme, setTheme] = useLocalStorage<Theme>('theme', 'light');
+  const [isLargeText, setIsLargeText] = useLocalStorage<boolean>('largeText', false);
 
   useEffect(() => {
     const root = window.document.documentElement;

@@ -1,5 +1,5 @@
 
-import { AlarmClock, Bell, BellOff } from 'lucide-react';
+import { AlarmClock } from 'lucide-react';
 import { useState } from 'react';
 import { Switch } from '@/components/ui/switch';
 

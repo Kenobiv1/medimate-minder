@@ -59,7 +59,7 @@ const Medications = () => {
         
         // Fetch alarms for each medication
         const medsWithAlarms = await Promise.all(
-          medsData.map(async (med) => {
+          (medsData || []).map(async (med) => {
             const { data: alarmData, error: alarmError } = await supabase
               .from('alarms')
               .select('*')
@@ -69,7 +69,7 @@ const Medications = () => {
             
             return {
               ...med,
-              alarms: alarmData.map(alarm => ({
+              alarms: (alarmData || []).map(alarm => ({
                 id: alarm.id,
                 time: alarm.time,
                 label: alarm.label,
@@ -211,7 +211,7 @@ const Medications = () => {
         if (medError) throw medError;
         
         // Add alarms for the new medication
-        if (formData.alarms.length > 0) {
+        if (formData.alarms.length > 0 && newMed) {
           const alarmsToInsert = formData.alarms.map(alarm => ({
             medication_id: newMed.id,
             time: alarm.time,
@@ -242,7 +242,7 @@ const Medications = () => {
       
       // Fetch alarms for each medication
       const medsWithAlarms = await Promise.all(
-        medsData.map(async (med) => {
+        (medsData || []).map(async (med) => {
           const { data: alarmData, error: alarmError } = await supabase
             .from('alarms')
             .select('*')
@@ -252,7 +252,7 @@ const Medications = () => {
           
           return {
             ...med,
-            alarms: alarmData.map(alarm => ({
+            alarms: (alarmData || []).map(alarm => ({
               id: alarm.id,
               time: alarm.time,
               label: alarm.label,
