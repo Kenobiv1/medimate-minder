@@ -34,11 +34,11 @@ export const ThemeProvider = ({ children }: { children: React.ReactNode }) => {
   }, [isLargeText]);
 
   const toggleTheme = () => {
-    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+    setTheme((prev) => (prev === 'light' ? 'dark' : 'light'));
   };
 
   const toggleLargeText = () => {
-    setIsLargeText(prev => !prev);
+    setIsLargeText((prev) => !prev);
   };
 
   return (
