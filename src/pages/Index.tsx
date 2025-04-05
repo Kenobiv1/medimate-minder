@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { AlarmClock, Plus, Pill, ScrollText, Settings as SettingsIcon } from 'lucide-react';
 import Clock from '@/components/Clock';
@@ -8,8 +9,11 @@ import { Link } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Alarm } from '@/components/AlarmCard';
+import UserMenu from '@/components/UserMenu';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Index = () => {
+  const { user } = useAuth();
   const [alarms, setAlarms] = useState<Alarm[]>([
     {
       id: '1',
@@ -47,7 +51,8 @@ const Index = () => {
     <div className="min-h-screen p-6 space-y-8">
       <header className="flex flex-col items-center justify-between">
         <Clock />
-        <div className="absolute top-6 right-6">
+        <div className="absolute top-6 right-6 flex items-center gap-2">
+          <UserMenu />
           <Link to="/settings">
             <Button variant="ghost" size="icon" className="rounded-full">
               <SettingsIcon className="w-5 h-5" />
