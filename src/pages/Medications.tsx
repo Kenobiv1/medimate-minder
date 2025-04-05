@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Plus, Pill } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -6,6 +7,8 @@ import { Link } from 'react-router-dom';
 import AlarmCard, { Alarm } from '@/components/AlarmCard';
 import { useToast } from "@/hooks/use-toast";
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import {
   Dialog,
   DialogContent,
@@ -22,38 +25,11 @@ interface Medication {
   alarms: Alarm[];
 }
 
-const initialMedications: Medication[] = [
-  {
-    id: '1',
-    name: 'Aspirin',
-    dosage: '100mg',
-    alarms: [
-      {
-        id: '1',
-        time: '09:00',
-        label: 'Morning Medication',
-        isActive: true,
-      }
-    ]
-  },
-  {
-    id: '2',
-    name: 'Vitamin D',
-    dosage: '1000 IU',
-    alarms: [
-      {
-        id: '2',
-        time: '13:00',
-        label: 'Afternoon Medication',
-        isActive: true,
-      }
-    ]
-  }
-];
-
 const Medications = () => {
   const { toast } = useToast();
-  const [medications, setMedications] = useState<Medication[]>(initialMedications);
+  const { user } = useAuth();
+  const [medications, setMedications] = useState<Medication[]>([]);
+  const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editMedication, setEditMedication] = useState<Medication | null>(null);
   const [formData, setFormData] = useState({
@@ -61,9 +37,63 @@ const Medications = () => {
     dosage: '',
     alarms: [] as Alarm[],
   });
-  // State for new alarm inputs (optional)
+  // State for new alarm inputs
   const [newAlarmTime, setNewAlarmTime] = useState('');
   const [newAlarmLabel, setNewAlarmLabel] = useState('');
+
+  // Fetch medications from Supabase
+  useEffect(() => {
+    async function fetchMedications() {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch medications
+        const { data: medsData, error: medsError } = await supabase
+          .from('medications')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (medsError) throw medsError;
+        
+        // Fetch alarms for each medication
+        const medsWithAlarms = await Promise.all(
+          medsData.map(async (med) => {
+            const { data: alarmData, error: alarmError } = await supabase
+              .from('alarms')
+              .select('*')
+              .eq('medication_id', med.id);
+              
+            if (alarmError) throw alarmError;
+            
+            return {
+              ...med,
+              alarms: alarmData.map(alarm => ({
+                id: alarm.id,
+                time: alarm.time,
+                label: alarm.label,
+                isActive: alarm.is_active
+              }))
+            };
+          })
+        );
+        
+        setMedications(medsWithAlarms);
+      } catch (error) {
+        console.error('Error fetching medications:', error);
+        toast({
+          title: "Failed to load medications",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchMedications();
+  }, [user, toast]);
 
   // Open dialog for adding a new medication
   const handleAddMedicationClick = () => {
@@ -79,7 +109,7 @@ const Medications = () => {
     setDialogOpen(true);
   };
 
-  // Add a new alarm to the form if both time and label are provided
+  // Add a new alarm to the form
   const handleAddAlarm = () => {
     if (newAlarmTime.trim() !== '' && newAlarmLabel.trim() !== '') {
       const newAlarm: Alarm = {
@@ -112,32 +142,136 @@ const Medications = () => {
   };
 
   // Handle form submission for adding/updating a medication
-  const handleFormSubmit = (e: React.FormEvent) => {
+  const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editMedication) {
-      // Update existing medication
-      setMedications((prev) =>
-        prev.map((med) =>
-          med.id === editMedication.id ? { ...med, ...formData } : med
-        )
-      );
+    
+    if (!user) {
       toast({
-        title: "Medication updated",
-        description: `${formData.name} was updated successfully.`,
+        title: "Authentication error",
+        description: "You must be logged in to save medications.",
+        variant: "destructive",
       });
-    } else {
-      // Add new medication
-      const newMed: Medication = {
-        id: Date.now().toString(),
-        ...formData,
-      };
-      setMedications((prev) => [...prev, newMed]);
+      return;
+    }
+    
+    try {
+      if (editMedication) {
+        // Update existing medication
+        const { error: medError } = await supabase
+          .from('medications')
+          .update({
+            name: formData.name,
+            dosage: formData.dosage,
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', editMedication.id);
+          
+        if (medError) throw medError;
+        
+        // Delete all existing alarms for this medication
+        const { error: deleteError } = await supabase
+          .from('alarms')
+          .delete()
+          .eq('medication_id', editMedication.id);
+          
+        if (deleteError) throw deleteError;
+        
+        // Add new alarms
+        if (formData.alarms.length > 0) {
+          const alarmsToInsert = formData.alarms.map(alarm => ({
+            medication_id: editMedication.id,
+            time: alarm.time,
+            label: alarm.label,
+            is_active: alarm.isActive
+          }));
+          
+          const { error: insertError } = await supabase
+            .from('alarms')
+            .insert(alarmsToInsert);
+            
+          if (insertError) throw insertError;
+        }
+        
+        toast({
+          title: "Medication updated",
+          description: `${formData.name} was updated successfully.`,
+        });
+      } else {
+        // Add new medication
+        const { data: newMed, error: medError } = await supabase
+          .from('medications')
+          .insert({
+            user_id: user.id,
+            name: formData.name,
+            dosage: formData.dosage,
+          })
+          .select()
+          .single();
+          
+        if (medError) throw medError;
+        
+        // Add alarms for the new medication
+        if (formData.alarms.length > 0) {
+          const alarmsToInsert = formData.alarms.map(alarm => ({
+            medication_id: newMed.id,
+            time: alarm.time,
+            label: alarm.label,
+            is_active: alarm.isActive
+          }));
+          
+          const { error: alarmError } = await supabase
+            .from('alarms')
+            .insert(alarmsToInsert);
+            
+          if (alarmError) throw alarmError;
+        }
+        
+        toast({
+          title: "Medication added",
+          description: `${formData.name} was added successfully.`,
+        });
+      }
+      
+      // Refresh the medications list
+      const { data: medsData, error: medsError } = await supabase
+        .from('medications')
+        .select('*')
+        .order('created_at', { ascending: false });
+        
+      if (medsError) throw medsError;
+      
+      // Fetch alarms for each medication
+      const medsWithAlarms = await Promise.all(
+        medsData.map(async (med) => {
+          const { data: alarmData, error: alarmError } = await supabase
+            .from('alarms')
+            .select('*')
+            .eq('medication_id', med.id);
+            
+          if (alarmError) throw alarmError;
+          
+          return {
+            ...med,
+            alarms: alarmData.map(alarm => ({
+              id: alarm.id,
+              time: alarm.time,
+              label: alarm.label,
+              isActive: alarm.is_active
+            }))
+          };
+        })
+      );
+      
+      setMedications(medsWithAlarms);
+      setDialogOpen(false);
+    } catch (error) {
+      console.error('Error saving medication:', error);
       toast({
-        title: "Medication added",
-        description: `${formData.name} was added successfully.`,
+        title: "Failed to save medication",
+        description: "Please try again later.",
+        variant: "destructive",
       });
     }
-    setDialogOpen(false);
   };
 
   return (
@@ -160,34 +294,49 @@ const Medications = () => {
             <Plus className="w-5 h-5" />
           </Button>
         </div>
-        <div className="grid gap-6">
-          {medications.map((medication) => (
-            <Card key={medication.id} className="p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold">{medication.name}</h2>
-                  <p className="text-sm text-muted-foreground">{medication.dosage}</p>
-                </div>
-                <Button variant="outline" onClick={() => handleConfigureMedicationClick(medication)}>
-                  Configure
-                </Button>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium text-muted-foreground">Alarms</h3>
-                {medication.alarms.length > 0 ? (
-                  <div className="grid gap-2">
-                    {medication.alarms.map((alarm) => (
-                      <AlarmCard key={alarm.id} alarm={alarm} />
-                    ))}
+        
+        {loading ? (
+          <div className="flex justify-center py-8">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+          </div>
+        ) : (
+          <div className="grid gap-6">
+            {medications.length > 0 ? (
+              medications.map((medication) => (
+                <Card key={medication.id} className="p-6 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h2 className="text-xl font-semibold">{medication.name}</h2>
+                      <p className="text-sm text-muted-foreground">{medication.dosage}</p>
+                    </div>
+                    <Button variant="outline" onClick={() => handleConfigureMedicationClick(medication)}>
+                      Configure
+                    </Button>
                   </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No alarms set.</p>
-                )}
+                  <div className="space-y-2">
+                    <h3 className="text-sm font-medium text-muted-foreground">Alarms</h3>
+                    {medication.alarms.length > 0 ? (
+                      <div className="grid gap-2">
+                        {medication.alarms.map((alarm) => (
+                          <AlarmCard key={alarm.id} alarm={alarm} />
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No alarms set.</p>
+                    )}
+                  </div>
+                </Card>
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <h3 className="font-medium text-muted-foreground mb-2">No medications added yet</h3>
+                <p className="text-sm text-muted-foreground">Add your first medication to set up reminders</p>
               </div>
-            </Card>
-          ))}
-        </div>
+            )}
+          </div>
+        )}
       </main>
+      
       {/* Medication Add/Edit Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent>

@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { AlarmClock, Plus, Pill, ScrollText, Settings as SettingsIcon } from 'lucide-react';
 import Clock from '@/components/Clock';
 import AlarmCard from '@/components/AlarmCard';
@@ -11,39 +11,138 @@ import { Input } from '@/components/ui/input';
 import { Alarm } from '@/components/AlarmCard';
 import UserMenu from '@/components/UserMenu';
 import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 const Index = () => {
   const { user } = useAuth();
-  const [alarms, setAlarms] = useState<Alarm[]>([
-    {
-      id: '1',
-      time: '09:00',
-      label: 'Morning Medication',
-      isActive: true,
-    },
-    {
-      id: '2',
-      time: '13:00',
-      label: 'Afternoon Medication',
-      isActive: true,
-    },
-  ]);
+  const { toast } = useToast();
+  const [alarms, setAlarms] = useState<Alarm[]>([]);
+  const [loading, setLoading] = useState(true);
   const [alarmDialogOpen, setAlarmDialogOpen] = useState(false);
   const [newAlarmTime, setNewAlarmTime] = useState('');
   const [newAlarmLabel, setNewAlarmLabel] = useState('');
+  const [medications, setMedications] = useState<{ id: string, name: string }[]>([]);
+  const [selectedMedicationId, setSelectedMedicationId] = useState<string>('');
 
-  const handleAddAlarm = () => {
-    if (newAlarmTime && newAlarmLabel) {
+  // Fetch alarms from all medications
+  useEffect(() => {
+    async function fetchAlarms() {
+      if (!user) return;
+      
+      try {
+        setLoading(true);
+        
+        // Fetch medications first
+        const { data: medsData, error: medsError } = await supabase
+          .from('medications')
+          .select('id, name')
+          .order('created_at', { ascending: false });
+          
+        if (medsError) throw medsError;
+        setMedications(medsData);
+        
+        // If there are medications, set the first one as selected by default
+        if (medsData.length > 0) {
+          setSelectedMedicationId(medsData[0].id);
+        }
+        
+        // Fetch all alarms across all medications
+        const { data: alarmsData, error: alarmsError } = await supabase
+          .from('alarms')
+          .select(`
+            id, 
+            time, 
+            label, 
+            is_active,
+            medication_id,
+            medications(name)
+          `)
+          .order('time', { ascending: true });
+          
+        if (alarmsError) throw alarmsError;
+        
+        const formattedAlarms: Alarm[] = alarmsData.map(alarm => ({
+          id: alarm.id,
+          time: alarm.time,
+          label: alarm.label,
+          isActive: alarm.is_active,
+          medicationName: alarm.medications?.name
+        }));
+        
+        setAlarms(formattedAlarms);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        toast({
+          title: "Failed to load alarms",
+          description: "Please try again later.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+    
+    fetchAlarms();
+  }, [user, toast]);
+
+  const handleAddAlarm = async () => {
+    if (!newAlarmTime || !newAlarmLabel || !selectedMedicationId) {
+      toast({
+        title: "Incomplete alarm",
+        description: "Please fill in all fields to add an alarm.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    try {
+      // Add the new alarm to Supabase
+      const { data, error } = await supabase
+        .from('alarms')
+        .insert({
+          medication_id: selectedMedicationId,
+          time: newAlarmTime,
+          label: newAlarmLabel,
+          is_active: true
+        })
+        .select(`
+          id, 
+          time, 
+          label, 
+          is_active,
+          medication_id,
+          medications(name)
+        `)
+        .single();
+        
+      if (error) throw error;
+      
+      // Add the new alarm to state
       const newAlarm: Alarm = {
-        id: Date.now().toString(),
-        time: newAlarmTime,
-        label: newAlarmLabel,
-        isActive: true,
+        id: data.id,
+        time: data.time,
+        label: data.label,
+        isActive: data.is_active,
+        medicationName: data.medications?.name
       };
-      setAlarms(prev => [...prev, newAlarm]);
+      
+      setAlarms(prev => [...prev, newAlarm].sort((a, b) => a.time.localeCompare(b.time)));
       setNewAlarmTime('');
       setNewAlarmLabel('');
       setAlarmDialogOpen(false);
+      
+      toast({
+        title: "Alarm added",
+        description: "Your medication alarm has been scheduled.",
+      });
+    } catch (error) {
+      console.error('Error adding alarm:', error);
+      toast({
+        title: "Failed to add alarm",
+        description: "Please try again later.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -78,18 +177,45 @@ const Index = () => {
               <Button 
                 size="icon" 
                 className="rounded-full" 
-                onClick={() => setAlarmDialogOpen(true)}
+                onClick={() => {
+                  if (medications.length === 0) {
+                    toast({
+                      title: "No medications",
+                      description: "Please add a medication first before setting an alarm.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  setAlarmDialogOpen(true);
+                }}
               >
                 <Plus className="w-5 h-5" />
               </Button>
             </div>
           </div>
           
-          <div className="grid gap-4">
-            {alarms.map((alarm) => (
-              <AlarmCard key={alarm.id} alarm={alarm} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : (
+            <div className="grid gap-4">
+              {alarms.length > 0 ? (
+                alarms.map((alarm) => (
+                  <AlarmCard key={alarm.id} alarm={alarm} />
+                ))
+              ) : (
+                <div className="text-center py-8">
+                  <h3 className="font-medium text-muted-foreground mb-2">No alarms set</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {medications.length > 0 
+                      ? "Click the + button to add your first alarm" 
+                      : "Add medications first to set up alarms"}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           <div className="flex justify-end space-x-2">
             <Link to="/history">
@@ -128,21 +254,44 @@ const Index = () => {
             }}
             className="space-y-4"
           >
-            <Input 
-              type="time" 
-              value={newAlarmTime} 
-              onChange={(e) => setNewAlarmTime(e.target.value)} 
-              required 
-              className="w-full" 
-            />
-            <Input 
-              type="text" 
-              placeholder="Alarm Label" 
-              value={newAlarmLabel} 
-              onChange={(e) => setNewAlarmLabel(e.target.value)} 
-              required 
-              className="w-full" 
-            />
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Medication</label>
+              <select 
+                className="w-full p-2 border rounded-md"
+                value={selectedMedicationId}
+                onChange={(e) => setSelectedMedicationId(e.target.value)}
+                required
+              >
+                <option value="">Select a medication</option>
+                {medications.map(med => (
+                  <option key={med.id} value={med.id}>{med.name}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Time</label>
+              <Input 
+                type="time" 
+                value={newAlarmTime} 
+                onChange={(e) => setNewAlarmTime(e.target.value)} 
+                required 
+                className="w-full" 
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <label className="block text-sm font-medium">Label</label>
+              <Input 
+                type="text" 
+                placeholder="Alarm Label" 
+                value={newAlarmLabel} 
+                onChange={(e) => setNewAlarmLabel(e.target.value)} 
+                required 
+                className="w-full" 
+              />
+            </div>
+            
             <DialogFooter>
               <Button type="submit" variant="outline" className="mr-2">
                 Add Alarm
