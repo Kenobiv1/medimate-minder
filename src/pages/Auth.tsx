@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { LogIn } from 'lucide-react';
+import { LogIn, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from '@/components/ui/use-toast';
@@ -56,13 +56,17 @@ const Auth = () => {
     }
   };
 
+  const handleSkip = () => {
+    navigate('/');
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-900">
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">MediMate</CardTitle>
           <CardDescription className="text-center">
-            Sign in to access your medication reminders
+            Sign in to save your medication reminders
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
@@ -75,10 +79,28 @@ const Auth = () => {
             <LogIn className="mr-2 h-4 w-4" />
             {loading ? "Connecting..." : "Continue with Google"}
           </Button>
+          
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Or
+            </span>
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+          </div>
+          
+          <Button
+            onClick={handleSkip}
+            variant="ghost"
+            className="w-full mt-2"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Return to App (View Only Mode)
+          </Button>
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-xs text-gray-500 dark:text-gray-400">
-            By signing in, you agree to our Terms of Service and Privacy Policy.
+            Sign in is only required for saving data.
           </p>
         </CardFooter>
       </Card>

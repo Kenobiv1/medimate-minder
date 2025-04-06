@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { AlarmClock, Plus, Pill, ScrollText, Settings as SettingsIcon } from 'lucide-react';
+import { AlarmClock, Plus, Pill, ScrollText, Settings as SettingsIcon, LogIn } from 'lucide-react';
 import Clock from '@/components/Clock';
 import AlarmCard, { Alarm } from '@/components/AlarmCard';
 import AIPlaceholder from '@/components/AIPlaceholder';
@@ -28,7 +28,13 @@ const Index = () => {
   // Fetch alarms from all medications
   useEffect(() => {
     async function fetchAlarms() {
-      if (!user) return;
+      if (!user) {
+        // If no user, set empty data and stop loading
+        setAlarms([]);
+        setMedications([]);
+        setLoading(false);
+        return;
+      }
       
       try {
         setLoading(true);
@@ -87,6 +93,15 @@ const Index = () => {
   }, [user, toast]);
 
   const handleAddAlarm = async () => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to add alarms.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     if (!newAlarmTime || !newAlarmLabel || !selectedMedicationId) {
       toast({
         title: "Incomplete alarm",
@@ -151,7 +166,16 @@ const Index = () => {
       <header className="flex flex-col items-center justify-between">
         <Clock />
         <div className="absolute top-6 right-6 flex items-center gap-2">
-          <UserMenu />
+          {user ? (
+            <UserMenu />
+          ) : (
+            <Link to="/auth">
+              <Button variant="outline" size="sm" className="gap-2">
+                <LogIn className="w-4 h-4" />
+                Sign In
+              </Button>
+            </Link>
+          )}
           <Link to="/settings">
             <Button variant="ghost" size="icon" className="rounded-full">
               <SettingsIcon className="w-5 h-5" />
@@ -178,6 +202,15 @@ const Index = () => {
                 size="icon" 
                 className="rounded-full" 
                 onClick={() => {
+                  if (!user) {
+                    toast({
+                      title: "Authentication Required",
+                      description: "Please sign in to add alarms.",
+                      variant: "destructive",
+                    });
+                    return;
+                  }
+                  
                   if (medications.length === 0) {
                     toast({
                       title: "No medications",
@@ -200,18 +233,33 @@ const Index = () => {
             </div>
           ) : (
             <div className="grid gap-4">
-              {alarms.length > 0 ? (
-                alarms.map((alarm) => (
-                  <AlarmCard key={alarm.id} alarm={alarm} />
-                ))
+              {user ? (
+                alarms.length > 0 ? (
+                  alarms.map((alarm) => (
+                    <AlarmCard key={alarm.id} alarm={alarm} />
+                  ))
+                ) : (
+                  <div className="text-center py-8">
+                    <h3 className="font-medium text-muted-foreground mb-2">No alarms set</h3>
+                    <p className="text-sm text-muted-foreground">
+                      {medications.length > 0 
+                        ? "Click the + button to add your first alarm" 
+                        : "Add medications first to set up alarms"}
+                    </p>
+                  </div>
+                )
               ) : (
-                <div className="text-center py-8">
-                  <h3 className="font-medium text-muted-foreground mb-2">No alarms set</h3>
-                  <p className="text-sm text-muted-foreground">
-                    {medications.length > 0 
-                      ? "Click the + button to add your first alarm" 
-                      : "Add medications first to set up alarms"}
+                <div className="bg-muted/50 rounded-lg p-6 text-center">
+                  <h3 className="font-medium mb-3">Sign in to view and manage your alarms</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Your medication alarms will be displayed here after you sign in
                   </p>
+                  <Link to="/auth">
+                    <Button variant="outline" className="gap-2">
+                      <LogIn className="w-4 h-4" />
+                      Sign In
+                    </Button>
+                  </Link>
                 </div>
               )}
             </div>

@@ -27,11 +27,11 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={<ProtectedRoute><Index /></ProtectedRoute>} />
-              <Route path="/medications" element={<ProtectedRoute><Medications /></ProtectedRoute>} />
-              <Route path="/history" element={<ProtectedRoute><History /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
+              <Route path="/" element={<ProtectedRoute requireAuth={false}><Index /></ProtectedRoute>} />
+              <Route path="/medications" element={<ProtectedRoute requireAuth={false}><Medications /></ProtectedRoute>} />
+              <Route path="/history" element={<ProtectedRoute requireAuth={false}><History /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute requireAuth={false}><Settings /></ProtectedRoute>} />
+              <Route path="/analytics" element={<ProtectedRoute requireAuth={false}><Analytics /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
